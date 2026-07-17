@@ -1,0 +1,186 @@
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --correct: #16a34a;
+  --incorrect: #dc2626;
+  --bg: #f8fafc;
+  --card-bg: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --text-muted: #64748b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+h1 { font-size: 1.8rem; margin-bottom: 4px; }
+h2 { font-size: 1.4rem; }
+.subtitle, .instructions { color: var(--text-muted); }
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  background: var(--primary);
+  color: white;
+  transition: background 0.15s, transform 0.1s;
+}
+button:hover:not(:disabled) { background: var(--primary-dark); }
+button:disabled { background: #cbd5e1; cursor: not-allowed; }
+button:active:not(:disabled) { transform: scale(0.97); }
+
+.link-btn {
+  background: none;
+  color: var(--text-muted);
+  text-decoration: underline;
+  padding: 4px 8px;
+}
+.link-btn:hover { background: none; color: var(--text); }
+
+input[type="text"], input[type="email"], input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-bottom: 12px;
+}
+
+#login-form { display: flex; flex-direction: column; gap: 8px; max-width: 320px; margin-top: 24px; }
+.error { color: var(--incorrect); }
+
+/* ---------- Page 1: Number Grid ---------- */
+.number-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.grid-btn {
+  background: var(--card-bg);
+  color: var(--text);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 0;
+  font-weight: 600;
+}
+.grid-btn.selected {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary-dark);
+}
+
+#grid-count { color: var(--text-muted); margin-bottom: 16px; }
+
+/* ---------- Page 2: Activities ---------- */
+.quiz-card, .mc-question, .fib-question {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.mc-word, .fib-sentence {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.mc-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  margin-bottom: 8px;
+  padding: 10px 14px;
+}
+.mc-option:hover:not(:disabled) { background: #eef2ff; }
+.mc-option.correct { background: #dcfce7; border-color: var(--correct); color: #14532d; }
+.mc-option.incorrect { background: #fee2e2; border-color: var(--incorrect); color: #7f1d1d; }
+
+.fib-hint { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px; }
+.fib-input {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-right: 8px;
+}
+.fib-input.correct { border-color: var(--correct); background: #dcfce7; }
+.fib-input.incorrect { border-color: var(--incorrect); background: #fee2e2; }
+.fib-answer { color: var(--incorrect); font-size: 0.9rem; margin-top: 6px; }
+
+.match-wrap { display: flex; gap: 16px; }
+.match-col { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.match-item {
+  background: var(--card-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 10px;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 0.9rem;
+}
+.match-item.active { border-color: var(--primary); background: #eef2ff; }
+.match-item.matched { background: #dcfce7; border-color: var(--correct); color: #14532d; }
+.match-item.shake { animation: shake 0.3s; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* ---------- Module Complete ---------- */
+#module-complete-screen { text-align: center; padding-top: 60px; }
+
+/* ---------- Page 3: Wall Game ---------- */
+.wall-display {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 4px;
+  margin: 20px 0;
+  padding: 12px;
+  background: #f1f5f9;
+  border-radius: 8px;
+}
+.wall-block {
+  aspect-ratio: 1.6;
+  background: #92400e;
+  border: 2px solid #78350f;
+  border-radius: 3px;
+}
+
+#wall-word { font-size: 1.4rem; font-weight: 700; text-align: center; margin-bottom: 16px; }
+#wall-block-count { color: var(--text-muted); }
+#wall-feedback { text-align: center; font-weight: 600; margin-top: 8px; }
+
+/* ---------- Win Screen ---------- */
+#win-screen { text-align: center; padding-top: 60px; }
