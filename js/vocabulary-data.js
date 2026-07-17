@@ -1,22 +1,127 @@
-document.getElementById("login-form").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const name = document.getElementById("student-name").value.trim();
-  if (!name) return;
-  localStorage.setItem("vocab_current_student", name);
-  showScreen("grid-screen");
-  loadLevels(name);
-});
+// Full 111-word TOEFL vocabulary set
+// Structure: id (sequence #), word, pos (part of speech), difficulty, definition, example
+const VOCAB_WORDS = [
+  {id:1, word:"access", pos:"noun", difficulty:"easy", definition:"the ability to go into (when somebody or something must allow you to enter)", example:"Only students have access to the university library."},
+  {id:2, word:"accurate", pos:"adjective", difficulty:"common", definition:"correct (about information, not opinions); on target", example:"That test is not an accurate test of intelligence."},
+  {id:3, word:"achieve", pos:"verb", difficulty:"easy", definition:"to accomplish a goal", example:"The best students know that to achieve good grades, they have to study every day."},
+  {id:4, word:"acquire", pos:"verb", difficulty:"easy", definition:"to get (especially when you will continue to get more)", example:"Janice isn't a doctor yet, but from her studies she's slowly acquiring the knowledge and skills she'll need."},
+  {id:5, word:"adequate", pos:"adjective", difficulty:"common", definition:"good enough for what you need", example:"A very light jacket will be adequate for Los Angeles's warm winter."},
+  {id:6, word:"adjust", pos:"verb", difficulty:"common", definition:"to change or move a little and make better or more accurate", example:"The colors on this TV screen are wrong. I'll adjust them."},
+  {id:7, word:"administration", pos:"noun", difficulty:"medium", definition:"the running of something or an organization (business, school, government, etc)", example:"The university administration cancelled all school events after a bad storm left most buildings without electricity."},
+  {id:8, word:"affect", pos:"verb", difficulty:"easy", definition:"to change, make different, have an effect", example:"Which language we speak affects how we think about the world."},
+  {id:9, word:"alter", pos:"verb", difficulty:"hard", definition:"to change, to adjust", example:"Magazines heavily alter the photos of celebrities they publish."},
+  {id:10, word:"alternative", pos:"noun", difficulty:"medium", definition:"other possibility or option", example:"The menu includes alternatives for students who don't eat meat."},
+  {id:11, word:"analyze", pos:"verb", difficulty:"common", definition:"to try to understand something better by closely looking at its details", example:"The accountant was too busy with paperwork to analyze the report that said the company had no money."},
+  {id:12, word:"annual", pos:"adjective", difficulty:"medium", definition:"yearly; happening every year", example:"Everyone in Manchester was excited about the annual game between the city's two soccer teams."},
+  {id:13, word:"apparent", pos:"adjective", difficulty:"hard", definition:"clearly seen or understood", example:"After only a few months, it was apparent that the French would not win the war."},
+  {id:14, word:"approach", pos:"verb", difficulty:"common", definition:"to come/go closer to something or someone", example:"The sign at the park said clearly, \"Do not approach wild animals! They will bite.\""},
+  {id:15, word:"area", pos:"noun", difficulty:"hard", definition:"a range of subjects or studies, a field, a discipline", example:"Researchers working in many different areas, from psychology to physics, will be able to use the new type of plastic."},
+  {id:16, word:"aspect", pos:"noun", difficulty:"hard", definition:"a feature, a characteristic, a particular part of something", example:"The three most important aspects to think about when learning a language are grammar, vocabulary, and pronunciation."},
+  {id:17, word:"assess", pos:"verb", difficulty:"common", definition:"to look closely at and figure out the value or type of something", example:"Before buying a house, you should always assess the building carefully."},
+  {id:18, word:"assist", pos:"verb", difficulty:"easy", definition:"to help or aid", example:"The box was too big to carry, so John asked the store manager to assist him."},
+  {id:19, word:"assume", pos:"verb", difficulty:"common", definition:"to believe without proof", example:"Ahmed assumed his forgetful professor wouldn't remember their meeting, but the professor was already waiting for him in her office."},
+  {id:20, word:"attitude", pos:"noun", difficulty:"medium", definition:"a set way of thinking or a set feeling about something or someone", example:"Zach always has a positive attitude when he has to deal with a problem at work."},
+  {id:21, word:"attribute", pos:"verb", difficulty:"medium", definition:"to give an event or person credit for something, like a work of art or a speech", example:"The museum director attributed the recently discovered painting to Van Gogh."},
+  {id:22, word:"authority", pos:"noun", difficulty:"medium", definition:"control or responsibility over something (people, area, laws, etc)", example:"Only Congress has the authority to make and pass laws for the country."},
+  {id:23, word:"available", pos:"adjective", difficulty:"easy", definition:"able to be reached, used, or bought", example:"The advisor was not available to meet all day Monday, so the student had to come back on Tuesday."},
+  {id:24, word:"aware", pos:"adjective", difficulty:"medium", definition:"to have knowledge of", example:"As Helen drove away from the gas station, she wasn't aware that her lights were off until she turned onto a dark street."},
+  {id:25, word:"benefit", pos:"noun", difficulty:"medium", definition:"something good coming from an action, agreement, idea, plan, etc.", example:"The president flew around the country, talking about the benefits of the new health care law."},
+  {id:26, word:"brief", pos:"adjective", difficulty:"common", definition:"short (about time, not length)", example:"Before we begin class, let me briefly introduce myself."},
+  {id:27, word:"capable", pos:"adjective", difficulty:"common", definition:"able to do", example:"Near the age of twelve months, children are capable of walking."},
+  {id:28, word:"capacity", pos:"noun", difficulty:"hard", definition:"the amount or volume something can hold", example:"The hotel is full to maximum capacity; there are no empty rooms."},
+  {id:29, word:"challenge", pos:"noun", difficulty:"easy", definition:"something difficult", example:"New medicines face many challenges before they can be put in stores."},
+  {id:30, word:"circumstance", pos:"noun", difficulty:"easy", definition:"the situation, facts or environment around an event", example:"My professor only gives extra time to finish essays under special circumstances. Normally it's not allowed."},
+  {id:31, word:"comment", pos:"noun", difficulty:"easy", definition:"an observation, note, or response", example:"The professor was angry about the negative comments made about his teaching style."},
+  {id:32, word:"commit", pos:"verb", difficulty:"hard", definition:"to do or perform (something very negative, like a crime)", example:"Michiko committed too many grammar errors in her essay, and that hurt her score."},
+  {id:33, word:"community", pos:"noun", difficulty:"medium", definition:"a group of people living or working together", example:"The Spanish-speaking community within New York City includes millions of people."},
+  {id:34, word:"compensate", pos:"verb", difficulty:"hard", definition:"to help correct a problem with another, positive thing", example:"The pay at Ian's new job was low, but the freedom his boss gave him compensated for that."},
+  {id:35, word:"complex", pos:"adjective", difficulty:"easy", definition:"with many different parts and difficult to understand, complicated", example:"The science behind the atomic bomb used in World War II was highly complex at the time, but it is simple compared to today's nuclear science."},
+  {id:36, word:"component", pos:"noun", difficulty:"hard", definition:"a part of a whole", example:"Many electronics are made of thousands of smaller components and wires."},
+  {id:37, word:"concentrate", pos:"verb", difficulty:"medium", definition:"to focus attention on something", example:"You must learn to concentrate to be successful on the test."},
+  {id:38, word:"concept", pos:"noun", difficulty:"common", definition:"an abstract idea", example:"Some concepts within advanced mathematics are hard to show in the real world."},
+  {id:39, word:"conduct", pos:"verb", difficulty:"easy", definition:"to organize and manage (for an event that takes careful planning and control)", example:"My research team is conducting a study on how the Internet is changing dating. We are collecting information from five countries."},
+  {id:40, word:"conflict", pos:"noun", difficulty:"medium", definition:"an argument, long battle, or difference of opinions", example:"The conflict in Syria has forced many people to leave the country."},
+  {id:41, word:"consequence", pos:"noun", difficulty:"easy", definition:"result, effect, what happens because of an event", example:"If you hurt the people around you, there will be unwanted consequences."},
+  {id:42, word:"considerable", pos:"adjective", difficulty:"medium", definition:"large enough or important enough to get special notice", example:"A considerable number of popular sports were invented in only the last 100 years."},
+  {id:43, word:"consist", pos:"verb", difficulty:"hard", definition:"to be made of", example:"The U.S. consists of fifty states."},
+  {id:44, word:"constant", pos:"adjective", difficulty:"common", definition:"not changing and not stopping; continuous", example:"The river flows constantly through the year and never freezes."},
+  {id:45, word:"constitute", pos:"verb", difficulty:"hard", definition:"to be the pieces that make a whole", example:"Fifty states constitute the U.S.A."},
+  {id:46, word:"constrain", pos:"verb", difficulty:"hard", definition:"to limit the activity of, restrict", example:"Popular belief says that a pet fish's size is constrained by the size of the tank it's in, but this is actually false."},
+  {id:47, word:"construct", pos:"verb", difficulty:"easy", definition:"to build", example:"The land flooded every year, so it was unsafe to construct buildings on it."},
+  {id:48, word:"consume", pos:"verb", difficulty:"common", definition:"to eat, to use", example:"No country consumes more oil than the U.S.A."},
+  {id:49, word:"contact", pos:"noun", difficulty:"easy", definition:"touching", example:"An electrical wire in contact with a pool of water can be extremely dangerous."},
+  {id:50, word:"context", pos:"noun", difficulty:"common", definition:"the information or situation around an idea, event, or something that is said", example:"When you have difficulty understanding a new word, look at the context. The sentence around the word might tell the meaning."},
+  {id:51, word:"contrast", pos:"verb", difficulty:"common", definition:"to be clearly different from", example:"The zebra's black and white stripes contrast clearly with the yellow grass around it."},
+  {id:52, word:"contribute", pos:"verb", difficulty:"medium", definition:"to give something (often money), to help reach a goal", example:"Over the past three years, my parents have not contributed to my university tuition."},
+  {id:53, word:"coordinate", pos:"verb", difficulty:"hard", definition:"to work with or communicate with the different people, groups, or pieces involved in a large project", example:"A chef at a big restaurant will spend his time coordinating all the workings of the kitchen, not cooking."},
+  {id:54, word:"core", pos:"adjective", difficulty:"hard", definition:"central, of fundamental importance", example:"Although we have made improvements in brain science, many of the core problems remain."},
+  {id:55, word:"correspond", pos:"verb", difficulty:"medium", definition:"to be a close match", example:"This new paint for the room does not correspond to the old paint."},
+  {id:56, word:"criteria", pos:"noun", difficulty:"hard", definition:"the measures by which you judge or decide something", example:"A good TOEFL essay includes a few criteria, including good structure, clear ideas, and natural vocabulary."},
+  {id:57, word:"culture", pos:"noun", difficulty:"easy", definition:"the way a group of people living in one area normally acts, including arts, style, food, and how people talk to and act with each other", example:"When living in another country, it can be very difficult to become comfortable in the new culture."},
+  {id:58, word:"data", pos:"noun", difficulty:"common", definition:"information, facts", example:"We collect data on the oceans' temperatures every year."},
+  {id:59, word:"debate", pos:"verb", difficulty:"medium", definition:"to argue, usually in a formal, polite way", example:"Watching the presidential debates on TV did not help me decide who to vote for."},
+  {id:60, word:"decline", pos:"verb", difficulty:"medium", definition:"to politely say no to an invitation or offer", example:"I declined dinner because I had plans to eat with my family instead."},
+  {id:61, word:"deduce", pos:"verb", difficulty:"hard", definition:"to come to a conclusion through logic and evidence, to figure out", example:"By analyzing the bones, we can deduce when the animal lived and, maybe, how it died."},
+  {id:62, word:"demonstrate", pos:"verb", difficulty:"common", definition:"to show an example of, to prove with evidence", example:"At eight years old, Mozart demonstrated his musical ability in London."},
+  {id:63, word:"derive", pos:"verb", difficulty:"hard", definition:"to get or create from", example:"All plastics are derived from oil."},
+  {id:64, word:"despite", pos:"preposition", difficulty:"common", definition:"even with (when an event is surprising because of some difficulty)", example:"We enjoyed our vacation despite the rain."},
+  {id:65, word:"discrete", pos:"adjective", difficulty:"hard", definition:"separate, not the same thing and with no parts in common", example:"Your left arm and right arm are controlled by two discrete areas of the brain."},
+  {id:66, word:"distinct", pos:"adjective", difficulty:"medium", definition:"clearly different from", example:"There are at least five distinct types of turtle living on the island."},
+  {id:67, word:"distribute", pos:"verb", difficulty:"medium", definition:"to give out something", example:"The teacher distributed tests to the class, and the students were happy to see they did well."},
+  {id:68, word:"diverse", pos:"adjective", difficulty:"hard", definition:"having many different types", example:"The student population is incredibly diverse at South State University, with students from 30 different countries."},
+  {id:69, word:"element", pos:"noun", difficulty:"medium", definition:"a part of something, usually part of an idea", example:"The element of his speech that I didn't like was at the end, when he talked about religion."},
+  {id:70, word:"emerge", pos:"verb", difficulty:"hard", definition:"to come out of", example:"After a winter spent sleeping, the bear emerges from its cave."},
+  {id:71, word:"emphasize", pos:"verb", difficulty:"common", definition:"to place extra importance on one part", example:"Most modern art emphasizes creativity and emotion, not skill."},
+  {id:72, word:"enable", pos:"verb", difficulty:"medium", definition:"to make something possible", example:"The classes in college will enable you to find a good job."},
+  {id:73, word:"enforce", pos:"verb", difficulty:"hard", definition:"to make people follow (a rule or law)", example:"Although smoking is not allowed on school campus, the ban isn't enforced, and many students smoke freely."},
+  {id:74, word:"entity", pos:"noun", difficulty:"hard", definition:"a thing that exists or acts as one unit", example:"The male angler fish will attach permanently to the female, and in time, the two fish will become a single entity."},
+  {id:75, word:"equivalent", pos:"adjective", difficulty:"medium", definition:"equal", example:"Rashim used a chart to find that his 6.7 GPA in his home country was equivalent to a 3.2 GPA in the United States."},
+  {id:76, word:"establish", pos:"verb", difficulty:"common", definition:"to build, to create (of a system, organization, or idea — not a real, physical thing)", example:"The U.S. government was established in the late 1700s."},
+  {id:77, word:"estimate", pos:"verb", difficulty:"medium", definition:"to determine roughly the value or number of something, to guess a number using some information", example:"Be careful to not forget any costs for the year when you estimate your budget."},
+  {id:78, word:"evaluate", pos:"verb", difficulty:"easy", definition:"to form an idea of the amount, number, or value of something", example:"Students are evaluated by their grades on tests, homework, essays, and in-class interaction."},
+  {id:79, word:"evident", pos:"adjective", difficulty:"easy", definition:"clearly seen or understood, obvious", example:"Dogs' feelings are usually evident in their actions."},
+  {id:80, word:"exclude", pos:"verb", difficulty:"hard", definition:"to not include, to not put in a list or group", example:"I eat almost anything, excluding spicy foods. I hate hot pepper."},
+  {id:81, word:"expand", pos:"verb", difficulty:"easy", definition:"to make larger; to give more detail on a subject", example:"Blowing air into a balloon will cause it to expand, but if you blow too much air, it will explode!"},
+  {id:82, word:"expose", pos:"verb", difficulty:"medium", definition:"to show or reveal something that was hidden", example:"The politician's crimes were exposed and he was forced to leave his position."},
+  {id:83, word:"external", pos:"adjective", difficulty:"hard", definition:"outside (especially of a body or system)", example:"Uncontrollable, external events can cause even a very careful company to fail."},
+  {id:84, word:"facilitate", pos:"verb", difficulty:"hard", definition:"to make easy or easier", example:"Classical music, unlike many types of music, will generally facilitate learning and improve memory."},
+  {id:85, word:"factor", pos:"noun", difficulty:"hard", definition:"a fact that influences or changes a result", example:"Two of the largest factors affecting children's healthy growth are food and relationships with parents."},
+  {id:86, word:"feature", pos:"noun", difficulty:"common", definition:"an important characteristic, a property", example:"The sound made by \"r\" is one of the most difficult features of spoken English."},
+  {id:87, word:"focus", pos:"verb", difficulty:"easy", definition:"to look at, think about, or give attention to", example:"I could not focus on my homework in the library because someone was playing music very loudly."},
+  {id:88, word:"framework", pos:"noun", difficulty:"hard", definition:"a structure for a building, system, or idea", example:"Ellen's business plan may have failed, but it formed the framework for her next, successful plan."},
+  {id:89, word:"function", pos:"verb", difficulty:"common", definition:"to work; to do what something should do", example:"I dropped my phone into a swimming pool, but, amazingly, it still functions."},
+  {id:90, word:"fundamental", pos:"adjective", difficulty:"common", definition:"basic, central; extremely important", example:"Alice believes that women are fundamentally different from men."},
+  {id:91, word:"furthermore", pos:"adverb", difficulty:"common", definition:"also, in addition, what's more", example:"Kenya has beautiful weather and, furthermore, does not have long nights in the winter."},
+  {id:92, word:"generate", pos:"verb", difficulty:"hard", definition:"to create, to produce (especially energy)", example:"Movement generates heat."},
+  {id:93, word:"grant", pos:"verb", difficulty:"hard", definition:"to agree to give (something that was asked for)", example:"The government has recently granted us access to information that was secret before."},
+  {id:94, word:"hence", pos:"adverb", difficulty:"common", definition:"therefore, so, as a result", example:"The evidence is false; hence, the conclusion is also false."},
+  {id:95, word:"hypothesis", pos:"noun", difficulty:"common", definition:"an idea which explains something but is unproven", example:"The hypothesis that the Earth is growing was shown to be false."},
+  {id:96, word:"identify", pos:"verb", difficulty:"common", definition:"to name, to show or figure out what something is", example:"Scientists have not been able to identify the language written on the rocks."},
+  {id:97, word:"illustrate", pos:"verb", difficulty:"common", definition:"to explain with an example", example:"Peter illustrated his point by telling a short story."},
+  {id:98, word:"impact", pos:"noun", difficulty:"hard", definition:"an effect that changes a situation", example:"The end of the war had a large impact on economic growth."},
+  {id:99, word:"imply", pos:"verb", difficulty:"easy", definition:"to communicate without saying specifically, to hint at an idea; to lead to a clear conclusion", example:"The president implied that he would not support the new law against selling tobacco, but he didn't say it clearly."},
+  {id:100, word:"indicate", pos:"verb", difficulty:"common", definition:"to be a sign of, to show", example:"The way you speak and act indicates your emotions."},
+  {id:101, word:"individual", pos:"adjective", difficulty:"easy", definition:"single or separated; only one of", example:"Joan was surprised that the ten books she ordered from the Internet came together, but in individual boxes."},
+  {id:102, word:"initial", pos:"adjective", difficulty:"medium", definition:"at the beginning", example:"My initial plan was to study until midnight and wake up late, but then I fell asleep early."},
+  {id:103, word:"instance", pos:"noun", difficulty:"common", definition:"an example, a case", example:"Two animals in Australia (platypuses and echidnas) are the only instances of animals with hair that lay eggs."},
+  {id:104, word:"institute", pos:"verb", difficulty:"hard", definition:"to start (a rule or system)", example:"In January, we will institute a plan to make car accidents less frequent."},
+  {id:105, word:"integrate", pos:"verb", difficulty:"hard", definition:"to become a part of", example:"It is difficult or even impossible to smoothly integrate a small, foreign culture into the main culture of a country."},
+  {id:106, word:"internal", pos:"adjective", difficulty:"medium", definition:"found or happening inside (a body, organization, etc)", example:"The US government has had lots of problems ever since internal messages were published on news websites."},
+  {id:107, word:"interpret", pos:"verb", difficulty:"medium", definition:"to figure out or explain the meaning of something", example:"The students could not interpret the extremely old book because the pages were hard to read."},
+  {id:108, word:"invest", pos:"verb", difficulty:"medium", definition:"to spend money, energy, or time on something hoping for good results later", example:"If you want to learn another language, you will have to invest a lot of your free time."},
+  {id:109, word:"investigate", pos:"verb", difficulty:"common", definition:"to try to find answers to questions about something, to research", example:"Doctors are investigating a newly discovered plant that might help to fight cancer."},
+  {id:110, word:"involve", pos:"verb", difficulty:"common", definition:"to include, to have as a part", example:"The study of architecture involves both art and science."},
+  {id:111, word:"issue", pos:"noun", difficulty:"common", definition:"a topic or situation to talk about", example:"In order to define what jazz music is, we need to look at a few different issues."},
+];
 
-document.getElementById("logout-btn-1").addEventListener("click", () => {
-  localStorage.removeItem("vocab_current_student");
-  showScreen("auth-screen");
-});
+// Module boundaries
+const MODULES = {
+  1: { range: [1, 37], label: "Module 1" },
+  2: { range: [38, 75], label: "Module 2" },
+  3: { range: [76, 111], label: "Module 3" },
+};
 
-// Auto-resume if a student name is already stored
-window.addEventListener("DOMContentLoaded", () => {
-  const savedName = localStorage.getItem("vocab_current_student");
-  if (savedName) {
-    showScreen("grid-screen");
-    loadLevels(savedName);
-  }
-});
+function getWordsForModule(moduleNum) {
+  const [start, end] = MODULES[moduleNum].range;
+  return VOCAB_WORDS.filter(w => w.id >= start && w.id <= end);
+}
