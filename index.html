@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VocabBuilder — TOEFL Vocabulary Trainer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- AUTH SCREEN -->
+    <section id="auth-screen" class="screen active">
+      <h1>VocabBuilder</h1>
+      <p class="subtitle">111 TOEFL words. Find your gaps. Close them. Bring down the wall.</p>
+      <form id="login-form">
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" id="password" placeholder="Password" required />
+        <button type="submit" id="login-btn">Log In</button>
+        <button type="button" id="signup-btn">Sign Up</button>
+      </form>
+      <p id="auth-error" class="error"></p>
+    </section>
+
+    <!-- PAGE 1: SELF-ASSESSMENT GRID -->
+    <section id="grid-screen" class="screen">
+      <header>
+        <h2>Which words don't you know?</h2>
+        <button id="logout-btn-1" class="link-btn">Log Out</button>
+      </header>
+      <p class="instructions">Look at your printed word list. Tap every number whose word you don't know well. Tap again to un-select.</p>
+      <div id="number-grid" class="number-grid"></div>
+      <p id="grid-count">0 words selected</p>
+      <button id="grid-continue" disabled>Continue to Practice</button>
+    </section>
+
+    <!-- PAGE 2: MODULE / SUBPAGE PRACTICE -->
+    <section id="practice-screen" class="screen">
+      <header>
+        <span id="module-label"></span>
+        <span id="subpage-label"></span>
+      </header>
+      <div id="activity-container"></div>
+      <p id="activity-feedback"></p>
+      <button id="confirm-continue" disabled>Confirm & Continue</button>
+    </section>
+
+    <!-- MODULE COMPLETE TRANSITION -->
+    <section id="module-complete-screen" class="screen">
+      <h2 id="module-complete-title"></h2>
+      <p id="module-complete-text"></p>
+      <button id="module-complete-next">Continue</button>
+    </section>
+
+    <!-- PAGE 3: THE WALL GAME -->
+    <section id="wall-screen" class="screen">
+      <header>
+        <h2>Bring Down the Wall</h2>
+        <span id="wall-block-count"></span>
+      </header>
+      <div id="wall-display" class="wall-display"></div>
+      <div id="wall-question-card" class="quiz-card">
+        <p id="wall-word"></p>
+        <div id="wall-answers"></div>
+      </div>
+      <p id="wall-feedback"></p>
+    </section>
+
+    <!-- WIN SCREEN -->
+    <section id="win-screen" class="screen">
+      <h2>🎉 The Wall Is Down!</h2>
+      <p id="win-summary"></p>
+      <button id="win-restart">Back to Start</button>
+    </section>
+
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/vocabulary-data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
