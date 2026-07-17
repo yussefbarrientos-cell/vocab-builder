@@ -12,7 +12,6 @@ document.getElementById("logout-btn-1").addEventListener("click", () => {
   showScreen("auth-screen");
 });
 
-// Auto-resume if a student name is already stored
 window.addEventListener("DOMContentLoaded", () => {
   const savedName = localStorage.getItem("vocab_current_student");
   if (savedName) {
