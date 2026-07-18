@@ -1,75 +1,472 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VocabBuilder — TOEFL Vocabulary Trainer</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Vocab Audio Engine</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: '#0b57d0',
+            brandHover: '#0a45b4',
+            brandContainer: '#d3e3fd',
+            brandOnContainer: '#041e49',
+            surfaceContainer: '#f0f4f9',
+            strokeDefault: '#dcdfe5',
+            onSurfaceDeEmphasis: '#444746',
+            onSurfaceDefault: '#1b1c1d'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      touch-action: manipulation; /* Eliminates the mobile double-tap zoom delay */
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+    .animate-shake {
+      animation: shake 0.15s ease-in-out 2;
+    }
+    @keyframes bounce-subtle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    .bounce-1 { animation: bounce-subtle 0.8s infinite 0s; }
+    .bounce-2 { animation: bounce-subtle 0.8s infinite 0.15s; }
+    .bounce-3 { animation: bounce-subtle 0.8s infinite 0.3s; }
+  </style>
 </head>
-<body>
-  <div id="app">
+<body class="bg-[#f8f9fa] text-onSurfaceDefault flex flex-col justify-between min-h-screen p-4 md:p-6 select-none">
 
-    <section id="auth-screen" class="screen active">
-      <h1>VocabBuilder</h1>
-      <p class="subtitle">111 TOEFL words. Find your gaps. Close them. Bring down the wall.</p>
-      <form id="login-form">
-        <input type="text" id="student-name" placeholder="Enter your name" required />
-        <button type="submit" id="login-btn">Start</button>
-      </form>
-      <p id="auth-error" class="error"></p>
-    </section>
-
-    <section id="grid-screen" class="screen">
-      <header>
-        <h2>Which words don't you know?</h2>
-        <span id="student-label"></span>
-        <button id="logout-btn-1" class="link-btn">Switch Student</button>
-      </header>
-      <p class="instructions">Look at your printed word list. Tap every number whose word you don't know well. Tap again to un-select.</p>
-      <div id="number-grid" class="number-grid"></div>
-      <p id="grid-count">0 words selected</p>
-      <button id="grid-continue" disabled>Continue to Practice</button>
-    </section>
-
-    <section id="practice-screen" class="screen">
-      <header>
-        <span id="module-label"></span>
-        <span id="subpage-label"></span>
-      </header>
-      <div id="activity-container"></div>
-      <p id="activity-feedback"></p>
-      <button id="confirm-continue" disabled>Confirm & Continue</button>
-    </section>
-
-    <section id="module-complete-screen" class="screen">
-      <h2 id="module-complete-title"></h2>
-      <p id="module-complete-text"></p>
-      <button id="module-complete-next">Continue</button>
-    </section>
-
-    <section id="wall-screen" class="screen">
-      <header>
-        <h2>Bring Down the Wall</h2>
-        <span id="wall-block-count"></span>
-      </header>
-      <div id="wall-display" class="wall-display"></div>
-      <div id="wall-question-card" class="quiz-card">
-        <p id="wall-word"></p>
-        <div id="wall-answers"></div>
+  <div class="w-full max-w-md mx-auto flex-1 flex flex-col justify-between">
+    <header class="text-center pt-2">
+      <div class="flex justify-between items-center px-1 mb-2">
+        <h1 class="text-sm font-extrabold tracking-wider text-brand uppercase">Listen & Repeat</h1>
+        <div class="text-xs font-semibold text-onSurfaceDeEmphasis" id="counter">Word 1 of 111</div>
       </div>
-      <p id="wall-feedback"></p>
+      <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden border border-slate-300">
+        <div id="progress-bar" class="bg-brand h-full w-0 transition-all duration-300"></div>
+      </div>
+    </header>
+
+    <section class="mt-4 flex flex-col items-center gap-2">
+      <span class="text-[11px] font-bold tracking-widest text-onSurfaceDeEmphasis uppercase">Pacing Speed</span>
+      <div class="flex gap-1.5 bg-slate-200/60 p-1 rounded-xl border border-strokeDefault">
+        <button onclick="changeInterval(5)" id="btn-5" class="px-3 py-1 text-xs font-bold rounded-lg transition-all text-onSurfaceDeEmphasis hover:bg-white/50">5s</button>
+        <button onclick="changeInterval(10)" id="btn-10" class="px-3 py-1 text-xs font-bold rounded-lg transition-all text-onSurfaceDeEmphasis hover:bg-white/50">10s</button>
+        <button onclick="changeInterval(15)" id="btn-15" class="px-3 py-1 text-xs font-bold rounded-lg transition-all text-onSurfaceDeEmphasis hover:bg-white/50 bg-white shadow-sm text-brand">15s</button>
+        <button onclick="changeInterval(30)" id="btn-30" class="px-3 py-1 text-xs font-bold rounded-lg transition-all text-onSurfaceDeEmphasis hover:bg-white/50">30s</button>
+        <button onclick="togglePause()" id="btn-pause" class="px-3 py-1 text-xs font-bold rounded-lg transition-all bg-amber-100 border border-amber-300 text-amber-800 flex items-center gap-1">
+          <span class="material-icons text-xs">pause</span><span>Pause</span>
+        </button>
+      </div>
     </section>
 
-    <section id="win-screen" class="screen">
-      <h2>🎉 The Wall Is Down!</h2>
-      <p id="win-summary"></p>
-      <button id="win-restart">Back to Start</button>
-    </section>
+    <main id="card-trigger" class="flex-grow flex flex-col justify-center items-center my-6 bg-white rounded-3xl p-6 border-2 border-strokeDefault hover:border-brand active:scale-[0.99] transition-all shadow-md cursor-pointer relative min-h-[280px]">
+      <div class="absolute top-4 text-center">
+        <span class="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest bg-surfaceContainer px-3 py-1 rounded-full">Tap Card to Hear Audio</span>
+      </div>
 
+      <div class="text-center my-auto flex flex-col items-center">
+        <!-- Speech Equalizer Waveform Indicator -->
+        <div id="waveform" class="flex gap-1 items-center justify-center h-6 mb-3 transition-opacity duration-300 opacity-0">
+          <div class="w-1 bg-brand rounded-full h-3 bounce-1"></div>
+          <div class="w-1 bg-brand rounded-full h-5 bounce-2"></div>
+          <div class="w-1 bg-brand rounded-full h-3 bounce-3"></div>
+        </div>
+        
+        <h2 id="current-word" class="text-4xl font-extrabold text-brand tracking-tight mb-1">Loading...</h2>
+        <span id="part-of-speech" class="text-xs font-bold uppercase tracking-wider text-brandOnContainer bg-brandContainer px-3 py-1 rounded-full mb-4">--</span>
+        <p id="word-definition" class="text-onSurfaceDeEmphasis text-center text-sm max-w-sm px-4 leading-relaxed mt-2">Active vocabulary definitions will stream here automatically.</p>
+      </div>
+
+      <!-- Linear visual pacing indicator bar -->
+      <div class="w-full absolute bottom-4 px-6">
+        <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+          <div id="countdown-bar" class="bg-brand h-full w-full transition-all duration-100 linear"></div>
+        </div>
+        <div id="pacer-text" class="text-[11px] font-mono text-center text-onSurfaceDeEmphasis mt-2 font-medium">⏱️ Initializing audio...</div>
+      </div>
+    </main>
+
+    <footer class="pb-2 flex gap-3">
+      <button id="prev-btn" class="w-1/3 py-4 font-bold text-lg rounded-xl border transition-all flex items-center justify-center gap-1 bg-white hover:bg-slate-50 border-strokeDefault text-onSurfaceDeEmphasis disabled:opacity-40 disabled:cursor-not-allowed">
+        <span class="material-icons">navigate_before</span>
+        <span>Previous</span>
+      </button>
+      <button id="next-btn" class="flex-1 py-4 bg-brand hover:bg-brandHover text-white font-bold text-lg rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+        <span>Next Word</span>
+        <span class="material-icons">arrow_forward</span>
+      </button>
+    </footer>
   </div>
 
-  <script src="js/vocabulary-data.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/app.js"></script>
+  <script>
+    const vocabData = [
+      { word: "access", partOfSpeech: "noun/verb", definition: "The ability, right, or permission to approach, enter, or use something." },
+      { word: "accurate", partOfSpeech: "adjective", definition: "Correct, precise, and completely free from errors." },
+      { word: "achieve", partOfSpeech: "verb", definition: "To successfully bring about or reach a desired objective by effort or skill." },
+      { word: "acquire", partOfSpeech: "verb", definition: "To gain asset, object, or reliable knowledge for oneself." },
+      { word: "adequate", partOfSpeech: "adjective", definition: "Satisfactory or acceptable in quality or quantity for a particular need." },
+      { word: "adjust", partOfSpeech: "verb", definition: "To alter slightly to achieve a better fit, match, or functional state." },
+      { word: "administration", partOfSpeech: "noun", definition: "The management or systematic organizing of business, operations, or institutions." },
+      { word: "affect", partOfSpeech: "verb", definition: "To make a difference to, influence, or produce a change in.", spokenOverride: "to affect" },
+      { word: "alter", partOfSpeech: "verb", definition: "To change or modify structurally or characteristically without replacing entirely." },
+      { word: "alternative", partOfSpeech: "noun/adj", definition: "One of two or more available possibilities or distinct choices." },
+      { word: "analyze", partOfSpeech: "verb", definition: "To examine something methodically and in detail to explain its nature or structure." },
+      { word: "annual", partOfSpeech: "adjective", definition: "Occurring once every year; calculated over the period of one calendar year." },
+      { word: "apparent", partOfSpeech: "adjective", definition: "Clearly visible, obvious, or understood; seeming real but not necessarily true." },
+      { word: "approach", partOfSpeech: "verb/noun", definition: "A way of dealing with a situation or problem; drawing physically or conceptually closer." },
+      { word: "area", partOfSpeech: "noun", definition: "A region or part of a town, country, body, or specific field of study." },
+      { word: "aspect", partOfSpeech: "noun", definition: "A particular part, feature, or distinct angle of a multifaceted matter." },
+      { word: "assess", partOfSpeech: "verb", definition: "To evaluate or estimate the nature, ability, value, or quality of something." },
+      { word: "assist", partOfSpeech: "verb", definition: "To help someone by sharing work, providing resources, or adding support." },
+      { word: "assume", partOfSpeech: "verb", definition: "To suppose that something is true without verified proof or absolute evidence." },
+      { word: "attitude", partOfSpeech: "noun", definition: "A settled way of thinking or feeling, typically reflected in a person's behavior." },
+      { word: "attribute", partOfSpeech: "verb/noun", definition: "To regard something as being caused by a specific factor; a characteristic quality.", spokenOverride: "to attribute" },
+      { word: "authority", partOfSpeech: "noun", definition: "The power, official right, or institutional capacity to give orders and enforce compliance." },
+      { word: "available", partOfSpeech: "adjective", definition: "Able to be used, obtained, or reached easily at this moment." },
+      { word: "aware", partOfSpeech: "adjective", definition: "Having knowledge or perception of a situation, fact, or sensory development." },
+      { word: "benefit", partOfSpeech: "noun/verb", definition: "An advantage, profit, or positive gain derived from an action or resource." },
+      { word: "brief", partOfSpeech: "adjective", definition: "Of short duration; concise and using few words to convey core details." },
+      { word: "capable", partOfSpeech: "adjective", definition: "Having the ability, fitness, power, or necessary skills to achieve something." },
+      { word: "capacity", partOfSpeech: "noun", definition: "The maximum amount that something can contain; total functional capability." },
+      { word: "challenge", partOfSpeech: "noun/verb", definition: "A task or situation that tests someone's abilities; a call to prove something." },
+      { word: "circumstance", partOfSpeech: "noun", definition: "A fact or condition connected with or relevant to an event or action." },
+      { word: "comment", partOfSpeech: "noun/verb", definition: "A verbal or written remark expressing an opinion, reaction, or explanation." },
+      { word: "commit", partOfSpeech: "verb", definition: "To dedicate resources, energy, or oneself to a specific course of action." },
+      { word: "community", partOfSpeech: "noun", definition: "A group of people living in the same place or sharing a common characteristic." },
+      { word: "compensate", partOfSpeech: "verb", definition: "To give someone something (typically money) in recognition of loss or work." },
+      { word: "complex", partOfSpeech: "adjective", definition: "Consisting of many different and connected parts; intricate or complicated." },
+      { word: "component", partOfSpeech: "noun", definition: "A constituent part or element of a larger machine, system, or concept." },
+      { word: "concentrate", partOfSpeech: "verb", definition: "To focus one's full attention or mental effort intensely on a single object." },
+      { word: "concept", partOfSpeech: "noun", definition: "An abstract idea, structural layout, or general mental notion." },
+      { word: "conduct", partOfSpeech: "verb/noun", definition: "To organize and carry out an activity; a person's visible behavior.", spokenOverride: "to conduct" },
+      { word: "conflict", partOfSpeech: "noun/verb", definition: "A serious disagreement, argument, or clash between opposing ideas." },
+      { word: "consequence", partOfSpeech: "noun", definition: "A result, effect, or outcome of an action or condition, often unwelcome." },
+      { word: "considerable", partOfSpeech: "adjective", definition: "Notably large in size, amount, extent, or cultural importance." },
+      { word: "consist", partOfSpeech: "verb", definition: "To be composed or made up of specific items or operational variables." },
+      { word: "constant", partOfSpeech: "adjective", definition: "Occurring continuously over a period of time; remaining unchanging." },
+      { word: "constitute", partOfSpeech: "verb", definition: "To be a part of a whole; to combine to establish or form a law or system." },
+      { word: "constrain", partOfSpeech: "verb", definition: "To severely restrict the scope, activity, or operational freedom of." },
+      { word: "construct", partOfSpeech: "verb", definition: "To build, assemble, or systematically formulate an object or complex theory.", spokenOverride: "to construct" },
+      { word: "consume", partOfSpeech: "verb", definition: "To eat, drink, ingest, or completely use up resources like time or fuel." },
+      { word: "contact", partOfSpeech: "noun/verb", definition: "State of physical touching, meeting, or communicating with an outside party." },
+      { word: "context", partOfSpeech: "noun", definition: "The circumstances that form the setting for an event, statement, or idea." },
+      { word: "contrast", partOfSpeech: "noun/verb", definition: "The state of being strikingly different from something else when juxtaposed.", spokenOverride: "to contrast" },
+      { word: "contribute", partOfSpeech: "verb", definition: "To give or supply money, assets, or effort toward a common fund or goal." },
+      { word: "coordinate", partOfSpeech: "verb", definition: "To bring different elements of a complex activity into an efficient relationship.", spokenOverride: "to coordinate" },
+      { word: "core", partOfSpeech: "noun/adj", definition: "The central, foundational, or most vital part of something." },
+      { word: "correspond", partOfSpeech: "verb", definition: "To have a close similarity, match, or regularly exchange letters/data." },
+      { word: "criteria", partOfSpeech: "noun (plural)", definition: "Principles, standards, or tests by which something may be judged or decided." },
+      { word: "culture", partOfSpeech: "noun", definition: "The ideas, customs, and social behavior of a particular people or society." },
+      { word: "data", partOfSpeech: "noun", definition: "Facts and statistics collected together for reference, storage, or analysis." },
+      { word: "debate", partOfSpeech: "noun/verb", definition: "A formal discussion on a particular topic in a public meeting or structure." },
+      { word: "decline", partOfSpeech: "verb/noun", definition: "To become smaller, fewer, or less; a polite refusal to accept an offer." },
+      { word: "deduce", partOfSpeech: "verb", definition: "To arrive at a logical fact or conclusion by reasoning from known premises." },
+      { word: "demonstrate", partOfSpeech: "verb", definition: "To clearly show, explain, or prove the existence or truth of something by evidence." },
+      { word: "derive", partOfSpeech: "verb", definition: "To obtain, trace, or extract something from a specified origin or baseline source." },
+      { word: "despite", partOfSpeech: "preposition", definition: "Without being affected by, stopped by, or altered by something mentioned." },
+      { word: "discrete", partOfSpeech: "adjective", definition: "Individually separate, distinct, and completely disconnected from others." },
+      { word: "distinct", partOfSpeech: "adjective", definition: "Recognizably different in nature from something else; physically clear." },
+      { word: "distribute", partOfSpeech: "verb", definition: "To hand out, share, or spread a commodity or data across an area or group." },
+      { word: "diverse", partOfSpeech: "adjective", definition: "Showing a great deal of variety; very different or multifaceted." },
+      { word: "element", partOfSpeech: "noun", definition: "A part or aspect of something abstract, especially one that is essential." },
+      { word: "emerge", partOfSpeech: "verb", definition: "To move out of or away from something and become visible or prominent." },
+      { word: "emphasize", partOfSpeech: "verb", definition: "To give special importance, validation, or structural prominence to something." },
+      { word: "enable", partOfSpeech: "verb", definition: "To give someone the authority, tools, or practical means to achieve a task." },
+      { word: "enforce", partOfSpeech: "verb", definition: "To compel compliance with a law, institutional rule, or specific obligation." },
+      { word: "entity", partOfSpeech: "noun", definition: "A thing with a distinct, independent, and legally valid existence." },
+      { word: "equivalent", partOfSpeech: "adjective/noun", definition: "Equal in value, amount, function, meaning, or structural weight." },
+      { word: "establish", partOfSpeech: "verb", definition: "To set up an organization, system, or set of rules on a firm, permanent basis." },
+      { word: "estimate", partOfSpeech: "noun/verb", definition: "A roughly calculated, educated guess of the value, size, or cost of an item." },
+      { word: "evaluate", partOfSpeech: "verb", definition: "To form an idea or assess the structural numeric value or merit of something." },
+      { word: "evident", partOfSpeech: "adjective", definition: "Plainly obvious; clearly understood and backed by sensory observation." },
+      { word: "exclude", partOfSpeech: "verb", definition: "To deny access, remove from a group, or bar from consideration intentionally." },
+      { word: "expand", partOfSpeech: "verb", definition: "To become larger in size, scope, volume, or structural surface area." },
+      { word: "expose", partOfSpeech: "verb", definition: "To make something visible by uncovering it; leaving unprotected from variables." },
+      { word: "external", partOfSpeech: "adjective", definition: "Belonging to or forming the outer surface, structure, or outside of an item." },
+      { word: "facilitate", partOfSpeech: "verb", definition: "To make an action, system, or dynamic sequence easier or less problematic." },
+      { word: "factor", partOfSpeech: "noun", definition: "A circumstance, variable, or influence that contributes actively to an outcome." },
+      { word: "feature", partOfSpeech: "noun/verb", definition: "A distinctive attribute, physical aspect, or characteristic of a product or entity." },
+      { word: "focus", partOfSpeech: "noun/verb", definition: "The center of interest, clear optical concentration, or focal target point." },
+      { word: "framework", partOfSpeech: "noun", definition: "An underlying essential supporting structure, ruleset, or system of ideas." },
+      { word: "function", partOfSpeech: "noun/verb", definition: "An activity, job, or purpose natural to or intended for a person or thing." },
+      { word: "fundamental", partOfSpeech: "adjective", definition: "Forming a necessary base, core framework, or central component of something." },
+      { word: "furthermore", partOfSpeech: "adverb", definition: "In addition to what has already been stated; used to introduce a reinforcing point." },
+      { word: "generate", partOfSpeech: "verb", definition: "To produce, create, cause to arise, or bring into physical existence." },
+      { word: "grant", partOfSpeech: "verb/noun", definition: "To agree to give, officially allow, or bestow an asset or legal privilege." },
+      { word: "hence", partOfSpeech: "adverb", definition: "As a consequence; for this reason; pointing forward to a logical result." },
+      { word: "hypothesis", partOfSpeech: "noun", definition: "A proposed, testable explanation made on the basis of limited starting evidence." },
+      { word: "identify", partOfSpeech: "verb", definition: "To establish or indicate exactly who or what someone or something is." },
+      { word: "illustrate", partOfSpeech: "verb", definition: "To explain or make something clear by using examples, charts, or images." },
+      { word: "impact", partOfSpeech: "noun/verb", definition: "The striking of one object against another; a massive, highly visible effect." },
+      { word: "imply", partOfSpeech: "verb", definition: "To strongly suggest the truth or existence of something without stating it directly." },
+      { word: "indicate", partOfSpeech: "verb", definition: "To point out, show, or serve as a highly visible sign or direct signal of." },
+      { word: "individual", partOfSpeech: "noun/adjective", definition: "Single; separate; characteristic of a single specific person or entity." },
+      { word: "initial", partOfSpeech: "adjective", definition: "Existing or occurring at the absolute start or opening phase of a process." },
+      { word: "instance", partOfSpeech: "noun", definition: "An example or single occurrence of something occurring or being true." },
+      { word: "institute", partOfSpeech: "noun/verb", definition: "An organization having a particular purpose; to introduce a system or law." },
+      { word: "integrate", partOfSpeech: "verb", definition: "To combine two or more things into a single, cohesive, functional whole." },
+      { word: "internal", partOfSpeech: "adjective", definition: "Situated on the inside, domestic, or structural interior of an object." },
+      { word: "interpret", partOfSpeech: "verb", definition: "To explain or translate the meaning of information, actions, or words cleanly." },
+      { word: "invest", partOfSpeech: "verb", definition: "To allocate money, time, or energy to an asset with the expectation of a return." },
+      { word: "investigate", partOfSpeech: "verb", definition: "To carry out a systematic, formal inquiry to discover hidden facts or truths." },
+      { word: "involve", partOfSpeech: "verb", definition: "To include something as a necessary component, part, circumstance, or result." },
+      { word: "issue", partOfSpeech: "noun/verb", definition: "An important topic or problem for debate; to distribute something officially." }
+    ];
+  </script>
+
+  <script>
+    let state = {
+      currentIndex: 0,
+      words: [...vocabData],
+      intervalSeconds: 15, // Default is exactly 15 seconds
+      isPaused: false,
+      secondsLeft: 15,
+      timer: null,
+      cooldownActive: false,
+      speechDelayTimeout: null
+    };
+
+    // DOM bindings
+    const wordEl = document.getElementById('current-word');
+    const posEl = document.getElementById('part-of-speech');
+    const defEl = document.getElementById('word-definition');
+    const progressEl = document.getElementById('progress-bar');
+    const countdownBarEl = document.getElementById('countdown-bar');
+    const pacerTextEl = document.getElementById('pacer-text');
+    const counterEl = document.getElementById('counter');
+    const cardTrigger = document.getElementById('card-trigger');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+
+    function speakCurrentWord() {
+      if (!('speechSynthesis' in window)) return;
+
+      // Force-cancel ongoing system queues immediately 
+      window.speechSynthesis.cancel();
+      clearTimeout(state.speechDelayTimeout);
+
+      // 150ms buffer to fully flush OS speech pipelines before starting new stream
+      state.speechDelayTimeout = setTimeout(() => {
+        try {
+          const current = state.words[state.currentIndex];
+          const query = current.spokenOverride || current.word;
+          const utterance = new SpeechSynthesisUtterance(query);
+
+          utterance.rate = 0.85; // Natural speed for repeat loops
+          utterance.pitch = 1.0;
+          utterance.lang = 'en-US';
+
+          // Bind equalizer waveform visualization to active audio states
+          utterance.onstart = () => {
+            document.getElementById('waveform').style.opacity = '1';
+          };
+          utterance.onend = () => {
+            document.getElementById('waveform').style.opacity = '0';
+          };
+          utterance.onerror = () => {
+            document.getElementById('waveform').style.opacity = '0';
+          };
+
+          // Wake up Chromium audio context if temporarily asleep
+          if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+          }
+
+          window.speechSynthesis.speak(utterance);
+        } catch (err) {
+          console.warn("Speech Synthesis threw an error:", err);
+        }
+      }, 150);
+    }
+
+    function triggerFrictionLock(element) {
+      if (!element) return;
+      element.classList.add('animate-shake', 'border-red-500', 'bg-red-50');
+      setTimeout(() => {
+        element.classList.remove('animate-shake', 'border-red-500', 'bg-red-50');
+      }, 400);
+    }
+
+    function canInteract(element) {
+      if (state.cooldownActive) {
+        triggerFrictionLock(element);
+        return false;
+      }
+      
+      // Implement a 1200ms lock-out timer
+      state.cooldownActive = true;
+      setTimeout(() => {
+        state.cooldownActive = false;
+      }, 1200);
+
+      return true;
+    }
+
+    function startClock() {
+      clearInterval(state.timer);
+      if (state.isPaused) {
+        countdownBarEl.style.width = '100%';
+        pacerTextEl.innerText = `⏱️ Countdown paused`;
+        return;
+      }
+
+      state.secondsLeft = state.intervalSeconds;
+      updateClockDisplay();
+
+      state.timer = setInterval(() => {
+        state.secondsLeft--;
+        updateClockDisplay();
+
+        if (state.secondsLeft <= 0) {
+          clearInterval(state.timer);
+          autoAdvance();
+        }
+      }, 1000);
+    }
+
+    function updateClockDisplay() {
+      // Dynamic visual width scale mapping remaining time
+      const percentLeft = (state.secondsLeft / state.intervalSeconds) * 100;
+      countdownBarEl.style.width = `${percentLeft}%`;
+      pacerTextEl.innerText = `⏱️ Next word in ${state.secondsLeft}s`;
+    }
+
+    function renderWord() {
+      const current = state.words[state.currentIndex];
+      wordEl.innerText = current.word;
+      posEl.innerText = current.partOfSpeech;
+      defEl.innerText = current.definition;
+
+      // Lock previous buttons if the user is on Word #1
+      prevBtn.disabled = (state.currentIndex === 0);
+
+      // Progress Metrics Sync
+      const overallProgress = ((state.currentIndex + 1) / state.words.length) * 100;
+      progressEl.style.width = `${overallProgress}%`;
+      counterEl.innerText = `Word ${state.currentIndex + 1} of ${state.words.length}`;
+
+      startClock();
+      speakCurrentWord();
+    }
+
+    function autoAdvance() {
+      if (state.currentIndex < state.words.length - 1) {
+        state.currentIndex++;
+        renderWord();
+      } else {
+        showCompletionScreen();
+      }
+    }
+
+    function advanceWord() {
+      if (!canInteract(nextBtn)) return;
+      if (state.currentIndex < state.words.length - 1) {
+        state.currentIndex++;
+        renderWord();
+      } else {
+        showCompletionScreen();
+      }
+    }
+
+    function regressWord() {
+      if (!canInteract(prevBtn)) return;
+      if (state.currentIndex > 0) {
+        state.currentIndex--;
+        renderWord();
+      }
+    }
+
+    function changeInterval(seconds) {
+      state.intervalSeconds = seconds;
+      state.isPaused = false;
+      
+      // Sync visual selector pill styles
+      [5, 10, 15, 30].forEach(sec => {
+        const btn = document.getElementById(`btn-${sec}`);
+        if (sec === seconds) {
+          btn.className = "px-3 py-1 text-xs font-bold rounded-lg transition-all bg-white shadow-sm text-brand border border-slate-300";
+        } else {
+          btn.className = "px-3 py-1 text-xs font-bold rounded-lg transition-all text-onSurfaceDeEmphasis hover:bg-white/50";
+        }
+      });
+
+      const pauseBtn = document.getElementById('btn-pause');
+      pauseBtn.className = "px-3 py-1 text-xs font-bold rounded-lg transition-all bg-slate-200/50 hover:bg-white/50 text-onSurfaceDeEmphasis flex items-center gap-1";
+      pauseBtn.innerHTML = `<span class="material-icons text-xs">pause</span><span>Pause</span>`;
+
+      startClock();
+    }
+
+    function togglePause() {
+      state.isPaused = !state.isPaused;
+      const pauseBtn = document.getElementById('btn-pause');
+
+      if (state.isPaused) {
+        clearInterval(state.timer);
+        pauseBtn.className = "px-3 py-1 text-xs font-bold rounded-lg transition-all bg-emerald-100 border border-emerald-300 text-emerald-800 flex items-center gap-1";
+        pauseBtn.innerHTML = `<span class="material-icons text-xs">play_arrow</span><span>Resume</span>`;
+        
+        // Remove focus styling from active timers
+        [5, 10, 15, 30].forEach(sec => {
+          document.getElementById(`btn-${sec}`).className = "px-3 py-1 text-xs font-bold rounded-lg transition-all text-onSurfaceDeEmphasis hover:bg-white/50";
+        });
+        
+        countdownBarEl.style.width = '100%';
+        pacerTextEl.innerText = `⏱️ Countdown paused`;
+      } else {
+        // Fallback default back to 15s if resume is triggered
+        changeInterval(15);
+      }
+    }
+
+    function showCompletionScreen() {
+      clearInterval(state.timer);
+      window.speechSynthesis.cancel();
+      
+      cardTrigger.innerHTML = `
+        <div class="text-brand text-5xl mb-4 animate-bounce">🎉</div>
+        <h2 class="text-2xl font-black text-brand mb-1">Session Complete!</h2>
+        <p class="text-onSurfaceDeEmphasis text-xs text-center px-6 max-w-xs leading-relaxed">Excellent effort! All 111 academic words processed successfully within the time window.</p>
+      `;
+      nextBtn.style.display = 'none';
+      prevBtn.style.display = 'none';
+      document.querySelector('section').style.display = 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderWord();
+
+      // Card-specific click mapping with internal cooldown verification
+      cardTrigger.addEventListener('click', (e) => {
+        // Prevent clicking child buttons from double trigger
+        if (e.target.closest('button')) return;
+        if (canInteract(cardTrigger)) {
+          speakCurrentWord();
+        }
+      });
+
+      prevBtn.addEventListener('click', regressWord);
+      nextBtn.addEventListener('click', advanceWord);
+    });
+  </script>
 </body>
 </html>
